@@ -29,23 +29,28 @@ module.exports = {
 				return transactions.slice();
 			},
 			registerOrder : function (o) {
-				if(!matchingOrder(o)) {
-					orders.push(Object.assign({}, o));
-					return;
-				} 
+				while(true) {
+					if(!matchingOrder(o)) {
+						orders.push(Object.assign({}, o));
+						return;
+					} 
 
-				let t = {
-					item: o.item,
-					from: o.action == "sell" ? o.acc : matchingOrder(o).acc,
-					to: o.action == "buy" ? o.acc : matchingOrder(o).acc,
-					qty : Math.min(matchingOrder(o).qty, o.qty),
+					let t = {
+						item: o.item,
+						from: o.action == "sell" ? o.acc : matchingOrder(o).acc,
+						to: o.action == "buy" ? o.acc : matchingOrder(o).acc,
+						qty : Math.min(matchingOrder(o).qty, o.qty),
+					}
+					t.charge = matchingOrder(o).unitPrice * t.qty
+
+					transactions.push(t);
+					o.qty -= t.qty;
+					matchingOrder(o).qty -= t.qty;
+
+					orders = orders.filter(o => o.qty > 0);
+
+					if(o.qty == 0) break;
 				}
-				t.charge = matchingOrder(o).unitPrice * t.qty
-
-				transactions.push(t);
-				matchingOrder(o).qty -= t.qty;
-
-				orders = orders.filter(o => o.qty > 0);
 			}
 
 		}

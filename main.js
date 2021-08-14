@@ -100,3 +100,42 @@ test({
 	],
 	message: "sell 4 buy 3",
 });
+
+test({
+	orders : [
+		{acc: "1", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "3", action: "sell", item: "1001",  qty: 2, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "3", to: "1", item: "1001", qty: 1, charge: 45},
+		{from: "3", to: "2", item: "1001", qty: 1, charge: 45},
+	],
+	message: "buy 1 buy 1 sell 2",
+});
+
+test({
+	orders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "3", action: "buy", item: "1001",  qty: 2, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "1", to: "3", item: "1001", qty: 1, charge: 45},
+		{from: "2", to: "3", item: "1001", qty: 1, charge: 45},
+	],
+	message: "sell 1 sell 1 buy 2",
+});
+
+test({
+	orders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 2, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 3, unitPrice: 45},
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "1", to: "2", item: "1001", qty: 2, charge: 45*2},
+		{from: "1", to: "2", item: "1001", qty: 1, charge: 45},
+	],
+	message: "sell 2 buy 3 sell 1",
+});
