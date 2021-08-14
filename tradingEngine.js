@@ -6,8 +6,8 @@ module.exports = {
 		// {acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
 		function matchingOrder(a) {
 			let pricePredicate = a.action == "sell" 
-				? (o => o.unitPrice >= a.unitPrice)
-				: (o => o.unitPrice <= a.unitPrice);
+				? (o => o.unitPrice <= a.unitPrice)
+				: (o => o.unitPrice >= a.unitPrice);
 
 			let mo = orders
 				.filter(o => o.item = a.item)
@@ -29,33 +29,21 @@ module.exports = {
 				return transactions.slice();
 			},
 			registerOrder : function (o) {
-				let m = matchingOrder(o);
-
-				if(!m) {
+				if(!matchingOrder(o)) {
 					orders.push(Object.assign({}, o));
 					return;
 				} 
 
-				let unitPrice = m.unitPrice;
-				let qty = Math.min(m.qty, o.qty);
-
-				if(o.action != "sell") {
-					let tmp = o;
-					o = m; 
-					m = tmp;
-				}
-
 				let t = {
 					item: o.item,
-					from: o.acc,
-					to: m.acc,
-					qty,
-					charge: unitPrice * qty
+					from: o.action == "sell" ? o.acc : matchingOrder(o).acc,
+					to: o.action == "buy" ? o.acc : matchingOrder(o).acc,
+					qty : Math.min(matchingOrder(o).qty, o.qty),
 				}
+				t.charge = matchingOrder(o).unitPrice * t.qty
 
 				transactions.push(t);
-				o.qty -= qty;
-				m.qty -= qty;
+				matchingOrder(o).qty -= t.qty;
 
 				orders = orders.filter(o => o.qty > 0);
 			}

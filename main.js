@@ -1,18 +1,6 @@
 console.log("Hello world!");
 console.log("Testing the trading application!");
 
-var te = require("./tradingEngine.js").instance();
-
-// TODO proper money handling
-var orders = [
-	{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
-	{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
-]
-
-var expectedTransactions = [
-	{from: "1", to: "2", item: "1001", qty: 1, charge: 45}
-]
-
 function assert(c, m) {
 	if(!c) {
 		console.log("FAIL");
@@ -21,57 +9,94 @@ function assert(c, m) {
 	}
 }
 
-assert(te.getOrders().length == 0, "Orders should be empty at first");
-assert(te.pendingTransactions().length == 0, "No transactions at first");
+function test(options) {
+	options = Object.assign({
+		orders: [],
+		expectedTransactions: [],
+		expectedOrders: [],
+		message: "Test message not filled out",
+	}, options);
 
-te.registerOrder(orders[0]);
-assert(te.pendingTransactions().length == 0, "Transactions should be empty after one");
-assert(te.getOrders().length == 1, "We should see the order");
+	console.log("TEST " + options.message);
 
-te.registerOrder(orders[1]);
-assert(te.pendingTransactions().length == 1, "We should have a transaction now");
-assert(te.getOrders().length == 0, "Mathicng orders should remove each other");
-let actualTransaction = te.pendingTransactions()[0]
-assert(actualTransaction.from == expectedTransactions[0].from, "from");
-assert(actualTransaction.to == expectedTransactions[0].to, "to");
-assert(actualTransaction.item == expectedTransactions[0].item, "item");
-assert(actualTransaction.qty == expectedTransactions[0].qty, "qty");
-assert(actualTransaction.charge == expectedTransactions[0].charge, "charge");
+	const te = require("./tradingEngine.js").instance();
+	for (let order of options.orders) {
+		te.registerOrder(order);
+	}
 
-console.log("SUCCESS 1");
+	assert(te.getOrders().length == options.expectedOrders.length, "orders length");
+	for(let i = 0; i < options.expectedOrders.length; i++) {
+		assert(te.getOrders()[i].acc == options.expectedOrders[i].acc, "ord acc");
+		assert(te.getOrders()[i].action == options.expectedOrders[i].action, "ord action");
+		assert(te.getOrders()[i].item == options.expectedOrders[i].item, "ord item");
+		assert(te.getOrders()[i].qty == options.expectedOrders[i].qty, "ord qty");
+		assert(te.getOrders()[i].unitPrice == options.expectedOrders[i].unitPrice, "ord unitPrice");
+	}
 
+	assert(te.pendingTransactions().length == options.expectedTransactions.length, "transactions length");
+	for(let i = 0; i < options.expectedTransactions.length; i++) {
+		assert(te.pendingTransactions()[i].from == options.expectedTransactions[i].from, "tr from");
+		assert(te.pendingTransactions()[i].to == options.expectedTransactions[i].to, "tr to");
+		assert(te.pendingTransactions()[i].item == options.expectedTransactions[i].item, "tr item");
+		assert(te.pendingTransactions()[i].qty == options.expectedTransactions[i].qty, "tr qty");
+		assert(te.pendingTransactions()[i].charge == options.expectedTransactions[i].charge, "tr charge");
+	}
+	console.log("SUCCESS");
+}
 
-orders = [
-	{acc: "1", action: "sell", item: "1001",  qty: 4, unitPrice: 45},
-	{acc: "2", action: "buy", item: "1001",  qty: 3, unitPrice: 45},
-]
+test({
+	orders : [ ],
+	expectedTransactions : [ ],
+	message: "Nothing",
+});
 
-expectedTransactions = [
-	{from: "1", to: "2", item: "1001", qty: 3, charge: 45*3}
-]
+// TODO proper money handling
+test({
+	orders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "1", to: "2", item: "1001", qty: 1, charge: 45}
+	],
+	message: "sell 1 buy 1",
+});
 
-expectedOrders = [
-	{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
-]
+test({
+	orders : [
+		{acc: "1", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "2", to: "1", item: "1001", qty: 1, charge: 45}
+	],
+	message: "buy 1 sell 1",
+});
 
-te = require("./tradingEngine.js").instance();
+test({
+	orders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 4, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 3, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "1", to: "2", item: "1001", qty: 3, charge: 45*3}
+	],
+	expectedOrders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	message: "sell 4 buy 3",
+});
 
-te.registerOrder(orders[0]);
-te.registerOrder(orders[1]);
-assert(te.pendingTransactions().length == 1, "transacstions");
-assert(te.getOrders().length == 1, "orders");
-
-assert(te.pendingTransactions()[0].from == expectedTransactions[0].from, "tr from");
-assert(te.pendingTransactions()[0].to == expectedTransactions[0].to, "tr to");
-assert(te.pendingTransactions()[0].item == expectedTransactions[0].item, "tr item");
-assert(te.pendingTransactions()[0].qty == expectedTransactions[0].qty, "tr qty");
-assert(te.pendingTransactions()[0].charge == expectedTransactions[0].charge, "tr charge");
-
-assert(te.getOrders()[0].acc == expectedOrders[0].acc, "ord acc");
-assert(te.getOrders()[0].action == expectedOrders[0].action, "ord action");
-assert(te.getOrders()[0].item == expectedOrders[0].item, "ord item");
-assert(te.getOrders()[0].qty == expectedOrders[0].qty, "ord qty");
-assert(te.getOrders()[0].unitPrice == expectedOrders[0].unitPrice, "ord unitPrice");
-
-
-console.log("SUCCESS2");
+test({
+	orders : [
+		{acc: "1", action: "buy", item: "1001",  qty: 4, unitPrice: 45},
+		{acc: "2", action: "sell", item: "1001",  qty: 3, unitPrice: 45},
+	],
+	expectedTransactions : [
+		{from: "2", to: "1", item: "1001", qty: 3, charge: 45*3}
+	],
+	expectedOrders : [
+		{acc: "1", action: "buy", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	message: "sell 4 buy 3",
+});
