@@ -6,8 +6,8 @@ module.exports = {
 		// {acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
 		function matchingOrder(a) {
 			let pricePredicate = a.action == "sell" 
-				? (o => o.unitPrice <= a.unitPrice)
-				: (o => o.unitPrice >= a.unitPrice);
+				? (o => o.unitPrice >= a.unitPrice)
+				: (o => o.unitPrice <= a.unitPrice);
 
 			let mo = orders
 				.filter(o => o.item = a.item)

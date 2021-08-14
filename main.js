@@ -139,3 +139,29 @@ test({
 	],
 	message: "sell 2 buy 3 sell 1",
 });
+
+test({
+	orders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 44},
+	],
+	expectedTransactions : [ ],
+	expectedOrders : [
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 44},
+	],
+	message: "sell too expensive",
+});
+
+test({
+	orders : [
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 44},
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	expectedTransactions : [ ],
+	expectedOrders : [
+		{acc: "2", action: "buy", item: "1001",  qty: 1, unitPrice: 44},
+		{acc: "1", action: "sell", item: "1001",  qty: 1, unitPrice: 45},
+	],
+	message: "buy too cheap",
+});
